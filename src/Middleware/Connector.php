@@ -8,6 +8,7 @@ use PhilKra\Serializers\Errors;
 use PhilKra\Stores\ErrorsStore;
 use PhilKra\Serializers\Transactions;
 use PhilKra\Stores\TransactionsStore;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  *
@@ -47,6 +48,7 @@ class Connector
     {
         $httpClientDefaults = [
             'timeout' => $this->config->get('timeout'),
+            'connect_timeout' => $this->config->get('connect_timeout'),
         ];
 
         $httpClientConfig = $this->config->get('httpClient') ?? [];
@@ -63,10 +65,15 @@ class Connector
      */
     public function sendTransactions(TransactionsStore $store) : bool
     {
-        $response = $this->client->post($this->getEndpoint('transactions'), [
-            'headers' => $this->getRequestHeaders(),
-            'json' => new Transactions($this->config, $store)
-        ]);
+        try {
+            $response = $this->client->post($this->getEndpoint('transactions'), [
+                'headers' => $this->getRequestHeaders(),
+                'json' => new Transactions($this->config, $store)
+            ]);
+        } catch (RequestException $e) {
+            return false;
+        }
+
         return ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300);
     }
 
@@ -79,10 +86,14 @@ class Connector
      */
     public function sendErrors(ErrorsStore $store) : bool
     {
-        $response = $this->client->post($this->getEndpoint('errors'), [
-            'headers' => $this->getRequestHeaders(),
-            'json' => new Errors($this->config, $store)
-        ]);
+        try {
+            $response = $this->client->post($this->getEndpoint('errors'), [
+                'headers' => $this->getRequestHeaders(),
+                'json' => new Errors($this->config, $store)
+            ]);
+        } catch (RequestException $e) {
+            return false;
+        }
 
         return ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300);
     }

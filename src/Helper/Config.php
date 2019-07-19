@@ -70,6 +70,7 @@ class Config
             'appVersion'     => '',
             'active'         => true,
             'timeout'        => 5,
+            'connect_timeout'=> 5,
             'apmVersion'     => 'v1',
             'env'            => [],
             'cookies'        => [],
