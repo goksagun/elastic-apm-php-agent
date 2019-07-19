@@ -47,8 +47,9 @@ class Connector
     private function configureHttpClient()
     {
         $httpClientDefaults = [
+            'future' => $this->config->get('async'),
             'timeout' => $this->config->get('timeout'),
-            'connect_timeout' => $this->config->get('connect_timeout'),
+            'connect_timeout' => $this->config->get('connectTimeout'),
         ];
 
         $httpClientConfig = $this->config->get('httpClient') ?? [];
@@ -65,16 +66,26 @@ class Connector
      */
     public function sendTransactions(TransactionsStore $store) : bool
     {
+        $result = false;
+
         try {
             $response = $this->client->post($this->getEndpoint('transactions'), [
                 'headers' => $this->getRequestHeaders(),
                 'json' => new Transactions($this->config, $store)
             ]);
         } catch (RequestException $e) {
-            return false;
+            return $result;
         }
 
-        return ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300);
+        if ($this->config->get('async')) {
+            $response->then(function ($response) {
+                $result = ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300);
+            });
+        } else {
+            $result = ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300);
+        }
+
+        return $result;
     }
 
     /**
@@ -86,16 +97,26 @@ class Connector
      */
     public function sendErrors(ErrorsStore $store) : bool
     {
+        $result = false;
+
         try {
             $response = $this->client->post($this->getEndpoint('errors'), [
                 'headers' => $this->getRequestHeaders(),
                 'json' => new Errors($this->config, $store)
             ]);
         } catch (RequestException $e) {
-            return false;
+            return $result;
         }
 
-        return ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300);
+        if ($this->config->get('async')) {
+            $response->then(function ($response) {
+                $result = ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300);
+            });
+        } else {
+            $result = ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300);
+        }
+
+        return $result;
     }
 
     /**

@@ -220,7 +220,7 @@ class Agent
     public function send() : bool
     {
         // Is the Agent enabled ?
-        if ($this->config->get('active') === false) {
+        if ($this->config->get('enabled') === false) {
             $this->errorsStore->reset();
             $this->transactionsStore->reset();
             return true;
